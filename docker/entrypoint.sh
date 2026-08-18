@@ -3,8 +3,7 @@ set -e
 
 echo "🚀 Starting Personal Money Manager Application..."
 
-# Remove stale host cached files from bootstrap/cache
-echo "🧹 Clearing stale cache files..."
+# Purge any stale cache files from bootstrap/cache
 rm -f /var/www/html/bootstrap/cache/*.php || true
 
 # Dynamic Apache Port Binding
@@ -12,6 +11,14 @@ PORT_NUM="${PORT:-80}"
 echo "Configuring Apache to listen on port ${PORT_NUM}..."
 sed -i "s/Listen [0-9]*/Listen ${PORT_NUM}/g" /etc/apache2/ports.conf || true
 sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${PORT_NUM}>/g" /etc/apache2/sites-available/000-default.conf || true
+
+# Ensure all storage and database directories exist with full write permissions
+mkdir -p /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/cache/data \
+         /var/www/html/storage/logs \
+         /var/www/html/database \
+         /var/www/html/bootstrap/cache
 
 # Ensure production .env file exists and is populated
 if [ ! -f /var/www/html/.env ]; then
@@ -38,20 +45,21 @@ MAIL_FROM_NAME="Personal Money Manager"
 EOF
 fi
 
-# Ensure database directory and SQLite file exist
-mkdir -p /var/www/html/database
+# Ensure SQLite database file exists
 if [ ! -f /var/www/html/database/database.sqlite ]; then
     echo "Creating SQLite database file..."
     touch /var/www/html/database/database.sqlite
 fi
-chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/.env || true
+
+# Set permissions
+chmod -R 777 /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache /var/www/html/.env || true
 
 # Run database migrations
 echo "📦 Running Database Migrations..."
 php artisan migrate --force || true
 
-# Package discovery and fresh cache generation
-echo "⚡ Generating fresh production caches..."
+# Generate production route and view caches
+echo "⚡ Generating production caches..."
 php artisan package:discover --ansi || true
 php artisan config:cache || true
 php artisan route:cache || true
