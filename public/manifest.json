@@ -1,0 +1,17 @@
+{
+  "name": "Personal Money Manager SaaS",
+  "short_name": "MoneyManager",
+  "description": "Personal Money & Wealth Management SaaS Application",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

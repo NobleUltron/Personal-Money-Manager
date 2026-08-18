@@ -1,0 +1,15 @@
+type: web
+name: personal-money-manager
+routes:
+  - path: /
+    port: 80
+ports:
+  - port: 80
+    protocol: http
+env:
+  - key: APP_ENV
+    value: production
+  - key: APP_DEBUG
+    value: "false"
+  - key: LOG_CHANNEL
+    value: stderr

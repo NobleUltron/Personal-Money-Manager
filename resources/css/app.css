@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+/* Custom Glassmorphism Utilities */
+.glass-panel {
+  @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 shadow-lg;
+}
+
+.glass-card {
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-sm transition-all duration-300 hover:shadow-md hover:border-indigo-500/30;
+}
+
+.gradient-pill {
+  @apply bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white font-semibold shadow-lg shadow-indigo-500/25;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600;
+}
