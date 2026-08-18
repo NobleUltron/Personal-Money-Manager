@@ -3,14 +3,30 @@ set -e
 
 echo "🚀 Starting Personal Money Manager Application..."
 
-# Fallback production environment variables if not set in cloud host
-export APP_KEY="${APP_KEY:-base64:+9xomeROcyZIS8VhBeUHdRBCoaLMTdHKx7HQu1vM1bc=}"
-export APP_ENV="${APP_ENV:-production}"
-export APP_DEBUG="${APP_DEBUG:-false}"
-export DB_CONNECTION="${DB_CONNECTION:-sqlite}"
-export DB_DATABASE="${DB_DATABASE:-/var/www/html/database/database.sqlite}"
-export SESSION_DRIVER="${SESSION_DRIVER:-file}"
-export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
+# Ensure production .env file exists and is populated
+if [ ! -f /var/www/html/.env ]; then
+    echo "Creating production .env file..."
+    cat <<EOF > /var/www/html/.env
+APP_NAME="Personal Money Manager"
+APP_ENV=production
+APP_KEY="${APP_KEY:-base64:+9xomeROcyZIS8VhBeUHdRBCoaLMTdHKx7HQu1vM1bc=}"
+APP_DEBUG=false
+APP_URL="${APP_URL:-https://personal-money-manager.onrender.com}"
+LOG_CHANNEL=stderr
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/html/database/database.sqlite
+SESSION_DRIVER=file
+QUEUE_CONNECTION=sync
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=nobleultron@gmail.com
+MAIL_PASSWORD=ohbsixlueyuaugni
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=nobleultron@gmail.com
+MAIL_FROM_NAME="Personal Money Manager"
+EOF
+fi
 
 # Ensure database directory and SQLite file exist
 mkdir -p /var/www/html/database
@@ -18,7 +34,7 @@ if [ ! -f /var/www/html/database/database.sqlite ]; then
     echo "Creating SQLite database file..."
     touch /var/www/html/database/database.sqlite
 fi
-chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache || true
+chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/.env || true
 
 # Run database migrations
 echo "📦 Running Database Migrations..."
