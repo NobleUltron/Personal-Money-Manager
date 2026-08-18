@@ -3,6 +3,10 @@ set -e
 
 echo "🚀 Starting Personal Money Manager Application..."
 
+# Remove stale host cached files from bootstrap/cache
+echo "🧹 Clearing stale cache files..."
+rm -f /var/www/html/bootstrap/cache/*.php || true
+
 # Dynamic Apache Port Binding
 PORT_NUM="${PORT:-80}"
 echo "Configuring Apache to listen on port ${PORT_NUM}..."
@@ -46,8 +50,9 @@ chmod -R 777 /var/www/html/database /var/www/html/storage /var/www/html/bootstra
 echo "📦 Running Database Migrations..."
 php artisan migrate --force || true
 
-# Clear cached config so environment changes take effect immediately
-php artisan config:clear || true
+# Package discovery and fresh cache generation
+echo "⚡ Generating fresh production caches..."
+php artisan package:discover --ansi || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
