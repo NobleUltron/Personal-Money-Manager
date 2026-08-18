@@ -3,6 +3,12 @@ set -e
 
 echo "🚀 Starting Personal Money Manager Application..."
 
+# Dynamic Apache Port Binding
+PORT_NUM="${PORT:-80}"
+echo "Configuring Apache to listen on port ${PORT_NUM}..."
+sed -i "s/Listen [0-9]*/Listen ${PORT_NUM}/g" /etc/apache2/ports.conf || true
+sed -i "s/<VirtualHost \*:[0-9]*>/<VirtualHost *:${PORT_NUM}>/g" /etc/apache2/sites-available/000-default.conf || true
+
 # Ensure production .env file exists and is populated
 if [ ! -f /var/www/html/.env ]; then
     echo "Creating production .env file..."
@@ -46,5 +52,5 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
-echo "✨ Web application ready! Starting Apache web server..."
+echo "✨ Web application ready! Starting Apache web server on port ${PORT_NUM}..."
 exec apache2-foreground
