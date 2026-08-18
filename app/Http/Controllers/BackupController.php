@@ -10,7 +10,7 @@ use App\Models\Budget;
 use App\Models\Subscription;
 use App\Models\Loan;
 use App\Models\Goal;
-use Str;
+use Illuminate\Support\Str;
 
 class BackupController extends Controller
 {
@@ -62,34 +62,43 @@ class BackupController extends Controller
 
         DB::beginTransaction();
         try {
+            // Restore Currency Preferences if present
+            if (isset($data['user']['currency']) && isset($data['user']['currency_symbol'])) {
+                $user->update([
+                    'currency' => $data['user']['currency'],
+                    'currency_symbol' => $data['user']['currency_symbol'],
+                ]);
+            }
+
             $accountMap = [];
 
-            // Restore Accounts
+            // 1. Restore Accounts
             if (isset($data['accounts']) && is_array($data['accounts'])) {
                 foreach ($data['accounts'] as $acc) {
-                    $oldId = $acc['id'];
+                    $accId = $acc['id'] ?? (string) Str::uuid();
                     $account = Account::updateOrCreate(
-                        ['user_id' => $user->id, 'name' => $acc['name']],
+                        ['id' => $accId],
                         [
-                            'id' => $oldId,
+                            'user_id' => $user->id,
+                            'name' => $acc['name'],
                             'bank_name' => $acc['bank_name'] ?? null,
                             'account_number' => $acc['account_number'] ?? null,
                             'type' => $acc['type'] ?? 'Checking',
                             'initial_balance' => $acc['initial_balance'] ?? 0,
                         ]
                     );
-                    $accountMap[$oldId] = $account->id;
+                    $accountMap[$accId] = $account->id;
                 }
             }
 
-            // Restore Transactions
+            // 2. Restore Transactions
             $txCount = 0;
             if (isset($data['transactions']) && is_array($data['transactions'])) {
                 foreach ($data['transactions'] as $tx) {
                     $accId = $accountMap[$tx['accountId']] ?? $tx['accountId'];
                     if (Account::where('id', $accId)->where('user_id', $user->id)->exists()) {
                         Transaction::updateOrCreate(
-                            ['id' => $tx['id']],
+                            ['id' => $tx['id'] ?? (string) Str::uuid()],
                             [
                                 'accountId' => $accId,
                                 'type' => $tx['type'],
@@ -104,7 +113,7 @@ class BackupController extends Controller
                 }
             }
 
-            // Restore Budgets
+            // 3. Restore Budgets
             if (isset($data['budgets']) && is_array($data['budgets'])) {
                 foreach ($data['budgets'] as $b) {
                     Budget::updateOrCreate(
@@ -114,39 +123,48 @@ class BackupController extends Controller
                 }
             }
 
-            // Restore Subscriptions
+            // 4. Restore Subscriptions
             if (isset($data['subscriptions']) && is_array($data['subscriptions'])) {
                 foreach ($data['subscriptions'] as $s) {
-                    Subscription::updateOrCreate(
-                        ['user_id' => $user->id, 'name' => $s['name']],
-                        [
-                            'accountId' => $s['accountId'] ?? ($accountMap[$s['accountId'] ?? ''] ?? null),
-                            'amount' => $s['amount'],
-                            'billing_cycle' => $s['billing_cycle'] ?? 'Monthly',
-                            'category' => $s['category'] ?? 'Subscriptions',
-                        ]
-                    );
+                    $subId = $s['id'] ?? (string) Str::uuid();
+                    $accId = $accountMap[$s['accountId'] ?? ''] ?? $s['accountId'] ?? array_key_first($accountMap);
+                    
+                    if ($accId && Account::where('id', $accId)->exists()) {
+                        Subscription::updateOrCreate(
+                            ['id' => $subId],
+                            [
+                                'user_id' => $user->id,
+                                'accountId' => $accId,
+                                'name' => $s['name'],
+                                'amount' => $s['amount'],
+                                'frequency' => $s['frequency'] ?? $s['billing_cycle'] ?? 'monthly',
+                                'next_due_date' => $s['next_due_date'] ?? date('Y-m-d'),
+                                'category' => $s['category'] ?? 'Subscriptions',
+                            ]
+                        );
+                    }
                 }
             }
 
-            // Restore Loans
+            // 5. Restore Loans
             if (isset($data['loans']) && is_array($data['loans'])) {
                 foreach ($data['loans'] as $l) {
+                    $loanId = $l['id'] ?? (string) Str::uuid();
                     Loan::updateOrCreate(
-                        ['user_id' => $user->id, 'title' => $l['title']],
+                        ['id' => $loanId],
                         [
-                            'type' => $l['type'],
+                            'user_id' => $user->id,
+                            'type' => $l['type'] ?? 'borrowed',
+                            'name' => $l['name'] ?? $l['title'] ?? 'Loan',
                             'amount' => $l['amount'],
-                            'remaining_amount' => $l['remaining_amount'] ?? $l['amount'],
-                            'person_name' => $l['person_name'] ?? null,
+                            'amount_paid' => $l['amount_paid'] ?? 0.00,
                             'due_date' => $l['due_date'] ?? null,
-                            'notes' => $l['notes'] ?? null,
                         ]
                     );
                 }
             }
 
-            // Restore Goals
+            // 6. Restore Goals
             $goalCount = 0;
             if (isset($data['goals']) && is_array($data['goals'])) {
                 foreach ($data['goals'] as $g) {
