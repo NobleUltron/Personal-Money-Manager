@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#312e81" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle Inner Glow Border -->
+  <rect x="8" y="8" width="496" height="496" rx="120" fill="none" stroke="white" stroke-width="4" stroke-opacity="0.2"/>
+
+  <!-- Main Wallet Body -->
+  <g filter="url(#shadow)">
+    <!-- Wallet Back -->
+    <rect x="116" y="160" width="280" height="192" rx="36" fill="white" fill-opacity="0.95"/>
+    
+    <!-- Wallet Flap / Detail -->
+    <path d="M116 200h280" stroke="#e0e7ff" stroke-width="8" stroke-linecap="round"/>
+    
+    <!-- Wallet Card / Note Peek -->
+    <rect x="148" y="128" width="160" height="48" rx="14" fill="#a5b4fc" fill-opacity="0.8"/>
+    <rect x="168" y="144" width="80" height="10" rx="5" fill="white" fill-opacity="0.9"/>
+    
+    <!-- Wallet Clasp Pocket -->
+    <rect x="296" y="224" width="116" height="64" rx="20" fill="url(#bgGrad)"/>
+    <circle cx="372" cy="256" r="14" fill="url(#coinGrad)"/>
+    <circle cx="372" cy="256" r="8" fill="white" fill-opacity="0.6"/>
+  </g>
+</svg>
