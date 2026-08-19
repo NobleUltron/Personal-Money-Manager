@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Card } from '@/Components/Card';
 import { Button } from '@/Components/Button';
+import { Modal } from '@/Components/Modal';
 import { useForm } from '@inertiajs/react';
 import {
     User,
@@ -16,7 +17,8 @@ import {
     Database,
     RefreshCw,
     FileJson,
-    FolderUp
+    FolderUp,
+    AlertCircle
 } from 'lucide-react';
 
 export default function Index({ user = {} }) {
@@ -39,6 +41,8 @@ export default function Index({ user = {} }) {
     });
 
     const [isRestoring, setIsRestoring] = useState(false);
+    const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+    const [pendingFile, setPendingFile] = useState(null);
 
     const currencies = [
         { code: 'UGX', symbol: 'UGX', name: 'Ugandan Shilling', flag: '🇺🇬' },
@@ -112,20 +116,26 @@ export default function Index({ user = {} }) {
         });
     };
 
-    const handleRestoreFile = (e) => {
+    const handleFileSelection = (e) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (confirm(`Are you sure you want to restore data from "${file.name}"? This will import all accounts, transactions, and goals.`)) {
-                setIsRestoring(true);
-                const formData = new FormData();
-                formData.append('backup_file', file);
-
-                restoreForm.setData('backup_file', file);
-                restoreForm.post('/settings/backup/import', {
-                    onFinish: () => setIsRestoring(false),
-                });
-            }
+            setPendingFile(file);
+            setIsRestoreModalOpen(true);
+            e.target.value = ''; // Reset input so same file can be selected again if needed
         }
+    };
+
+    const confirmRestore = () => {
+        if (!pendingFile) return;
+        setIsRestoring(true);
+        restoreForm.setData('backup_file', pendingFile);
+        restoreForm.post('/settings/backup/import', {
+            onSuccess: () => {
+                setIsRestoreModalOpen(false);
+                setPendingFile(null);
+            },
+            onFinish: () => setIsRestoring(false),
+        });
     };
 
     return (
@@ -367,7 +377,7 @@ export default function Index({ user = {} }) {
                                     <input
                                         type="file"
                                         accept=".json"
-                                        onChange={handleRestoreFile}
+                                        onChange={handleFileSelection}
                                         disabled={isRestoring}
                                         className="hidden"
                                     />
@@ -376,6 +386,66 @@ export default function Index({ user = {} }) {
                         </div>
                     </div>
                 </Card>
+
+                {/* Custom Glassmorphic Restore Confirmation Modal */}
+                <Modal
+                    isOpen={isRestoreModalOpen}
+                    onClose={() => {
+                        if (!isRestoring) {
+                            setIsRestoreModalOpen(false);
+                            setPendingFile(null);
+                        }
+                    }}
+                    title="Restore Financial Data"
+                >
+                    <div className="space-y-5">
+                        <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300">
+                            <div className="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                                <Database className="w-5 h-5 stroke-[2.2]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                                    Selected Backup File
+                                </p>
+                                <p className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 mt-0.5 truncate">
+                                    {pendingFile?.name}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Are you sure you want to restore this backup? This will import and synchronize all accounts, transactions, category budgets, subscriptions, and savings milestones into your account.
+                        </p>
+
+                        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-2.5 text-[11px] text-amber-700 dark:text-amber-300 font-medium">
+                            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
+                            <span>Existing accounts and records with matching IDs will be safely synchronized.</span>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 pt-2">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => {
+                                    setIsRestoreModalOpen(false);
+                                    setPendingFile(null);
+                                }}
+                                disabled={isRestoring}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={confirmRestore}
+                                disabled={isRestoring}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold shadow-lg shadow-purple-500/25"
+                            >
+                                <RefreshCw className={`w-4 h-4 mr-2 ${isRestoring ? 'animate-spin' : ''}`} />
+                                {isRestoring ? 'Restoring Data...' : 'Confirm & Restore'}
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
         </AuthenticatedLayout>
     );
