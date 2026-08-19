@@ -29,10 +29,9 @@ else
     echo "📁 Using SQLite database connection..."
 fi
 
-# Ensure production .env file exists and is populated
-if [ ! -f /var/www/html/.env ]; then
-    echo "Creating production .env file..."
-    cat <<EOF > /var/www/html/.env
+# Always dynamically generate the production .env file to ensure correct DATABASE_URL and SESSION_DRIVER
+echo "Writing production .env file with DB_CONNECTION=${DB_CONN}..."
+cat <<EOF > /var/www/html/.env
 APP_NAME="Personal Money Manager"
 APP_ENV=production
 APP_KEY="${APP_KEY:-base64:+9xomeROcyZIS8VhBeUHdRBCoaLMTdHKx7HQu1vM1bc=}"
@@ -53,7 +52,6 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=nobleultron@gmail.com
 MAIL_FROM_NAME="Personal Money Manager"
 EOF
-fi
 
 # Ensure SQLite database file exists if sqlite is used
 if [ "$DB_CONN" = "sqlite" ] && [ ! -f /var/www/html/database/database.sqlite ]; then
@@ -64,11 +62,16 @@ fi
 # Set permissions
 chmod -R 777 /var/www/html/storage /var/www/html/database /var/www/html/bootstrap/cache /var/www/html/.env || true
 
+# Clear and rebuild caches
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+
 # Run database migrations
 echo "📦 Running Database Migrations..."
 php artisan migrate --force || true
 
-# Generate production route and view caches
+# Generate production caches
 echo "⚡ Generating production caches..."
 php artisan package:discover --ansi || true
 php artisan config:cache || true
