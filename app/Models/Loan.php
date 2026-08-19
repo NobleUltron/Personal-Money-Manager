@@ -12,6 +12,7 @@ class Loan extends Model
     protected $fillable = [
         'id',
         'user_id',
+        'accountId',
         'type',
         'name',
         'amount',
@@ -22,5 +23,10 @@ class Loan extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'accountId');
     }
 }

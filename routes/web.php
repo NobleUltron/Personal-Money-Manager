@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
     Route::post('/loans', [LoanController::class, 'store'])->name('loans.store');
     Route::put('/loans/{id}', [LoanController::class, 'update'])->name('loans.update');
+    Route::post('/loans/{id}/repay', [LoanController::class, 'repay'])->name('loans.repay');
     Route::delete('/loans/{id}', [LoanController::class, 'destroy'])->name('loans.destroy');
 
     // Savings Goals & Wealth Milestones
