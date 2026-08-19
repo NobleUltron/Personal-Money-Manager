@@ -30,6 +30,7 @@ class SubscriptionController extends Controller
             'subscriptions' => $subscriptions,
             'accounts' => $accounts,
             'monthlyTotal' => round($monthlyTotal, 2),
+            'currencySymbol' => $user->currency_symbol ?? 'UGX',
         ]);
     }
 
