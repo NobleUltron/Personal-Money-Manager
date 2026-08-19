@@ -16,4 +16,22 @@ export default defineConfig({
         }),
         react(),
     ],
+    build: {
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules/recharts')) {
+                        return 'recharts';
+                    }
+                    if (id.includes('node_modules/lucide-react')) {
+                        return 'lucide';
+                    }
+                    if (id.includes('node_modules/@inertiajs')) {
+                        return 'inertia';
+                    }
+                },
+            },
+        },
+    },
 });
