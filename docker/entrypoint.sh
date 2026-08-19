@@ -35,7 +35,7 @@ cat <<EOF > /var/www/html/.env
 APP_NAME="Personal Money Manager"
 APP_ENV=production
 APP_KEY="${APP_KEY:-base64:+9xomeROcyZIS8VhBeUHdRBCoaLMTdHKx7HQu1vM1bc=}"
-APP_DEBUG=false
+APP_DEBUG="${APP_DEBUG:-true}"
 APP_URL="${APP_URL:-https://personal-money-manager.onrender.com}"
 LOG_CHANNEL=stderr
 DB_CONNECTION=${DB_CONN}
