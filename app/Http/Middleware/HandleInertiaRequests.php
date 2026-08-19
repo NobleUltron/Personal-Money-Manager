@@ -31,7 +31,6 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $notifications = $user ? NotificationService::getNotificationsForUser($user) : [];
 
         return array_merge(parent::share($request), [
             'auth' => [
@@ -45,9 +44,9 @@ class HandleInertiaRequests extends Middleware
                     'twoFactorEnabled' => (bool) $user->two_factor_enabled,
                 ] : null,
             ],
-            'notifications' => $notifications,
-            'unreadCount' => count($notifications),
-            'userAccounts' => $user ? $user->accounts()->get() : [],
+            'notifications' => fn () => $user ? NotificationService::getNotificationsForUser($user) : [],
+            'unreadCount' => fn () => $user ? count(NotificationService::getNotificationsForUser($user)) : 0,
+            'userAccounts' => fn () => $user ? $user->accounts()->select('id', 'name', 'bank_name', 'type', 'initial_balance')->get() : [],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
