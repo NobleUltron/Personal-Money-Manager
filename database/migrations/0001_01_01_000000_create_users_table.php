@@ -14,8 +14,14 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('username')->unique();
+            $table->string('email')->nullable();
             $table->string('password');
             $table->longText('profile_picture')->nullable();
+            $table->string('currency')->default('UGX');
+            $table->string('currency_symbol')->default('UGX');
+            $table->boolean('two_factor_enabled')->default(false);
+            $table->string('two_factor_code', 10)->nullable();
+            $table->timestamp('two_factor_expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
