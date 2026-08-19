@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm, Link } from '@inertiajs/react';
+import { useForm, Link, Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Button } from '@/Components/Button';
 import { ShieldCheck, KeyRound, RefreshCcw, ArrowRight } from 'lucide-react';
@@ -23,6 +23,7 @@ export default function TwoFactorChallenge() {
 
     return (
         <GuestLayout>
+            <Head title="Two-Factor Authentication" />
             <div className="mb-6 text-center">
                 <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3">
                     <ShieldCheck className="w-6 h-6 stroke-[2]" />

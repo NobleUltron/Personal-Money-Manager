@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm, Link } from '@inertiajs/react';
+import { useForm, Link, Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Button } from '@/Components/Button';
 import { User, Lock, ArrowRight } from 'lucide-react';
@@ -18,6 +18,7 @@ export default function Login() {
 
     return (
         <GuestLayout>
+            <Head title="Sign In" />
             <div className="mb-6">
                 <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Welcome back</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

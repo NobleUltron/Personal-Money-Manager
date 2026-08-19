@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm, Link } from '@inertiajs/react';
+import { useForm, Link, Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Button } from '@/Components/Button';
 import { User, ArrowLeft, Send } from 'lucide-react';
@@ -16,6 +16,7 @@ export default function ForgotPassword() {
 
     return (
         <GuestLayout>
+            <Head title="Forgot Password" />
             <div className="mb-6">
                 <Link href="/login" className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-indigo-600 mb-3">
                     <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In

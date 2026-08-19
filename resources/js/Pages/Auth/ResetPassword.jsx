@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, Head } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Button } from '@/Components/Button';
 import { Lock, KeyRound } from 'lucide-react';
@@ -19,6 +19,7 @@ export default function ResetPassword({ token, username }) {
 
     return (
         <GuestLayout>
+            <Head title="Reset Password" />
             <div className="mb-6">
                 <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Create New Password</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">

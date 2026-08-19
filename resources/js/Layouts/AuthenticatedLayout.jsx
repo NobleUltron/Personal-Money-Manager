@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, usePage, useForm } from '@inertiajs/react';
+import { Link, usePage, useForm, Head } from '@inertiajs/react';
 import { Modal } from '@/Components/Modal';
 import { Button } from '@/Components/Button';
 import { formatMoney } from '@/Utils/formatCurrency';
@@ -228,6 +228,7 @@ export default function AuthenticatedLayout({ children, header }) {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-300">
+            {header && <Head title={typeof header === 'string' ? header : 'Personal Money Manager'} />}
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800/80 sticky top-0 h-screen z-20">
                 <div className="p-6 flex items-center gap-3">
