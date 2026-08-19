@@ -20,6 +20,15 @@ mkdir -p /var/www/html/storage/framework/sessions \
          /var/www/html/database \
          /var/www/html/bootstrap/cache
 
+# Detect Database Connection
+if [ -n "$DATABASE_URL" ]; then
+    echo "🐘 PostgreSQL connection detected via DATABASE_URL!"
+    DB_CONN="pgsql"
+else
+    DB_CONN="${DB_CONNECTION:-sqlite}"
+    echo "📁 Using SQLite database connection..."
+fi
+
 # Ensure production .env file exists and is populated
 if [ ! -f /var/www/html/.env ]; then
     echo "Creating production .env file..."
@@ -30,7 +39,8 @@ APP_KEY="${APP_KEY:-base64:+9xomeROcyZIS8VhBeUHdRBCoaLMTdHKx7HQu1vM1bc=}"
 APP_DEBUG=false
 APP_URL="${APP_URL:-https://personal-money-manager.onrender.com}"
 LOG_CHANNEL=stderr
-DB_CONNECTION=sqlite
+DB_CONNECTION=${DB_CONN}
+DATABASE_URL="${DATABASE_URL:-}"
 DB_DATABASE=/var/www/html/database/database.sqlite
 SESSION_DRIVER=file
 QUEUE_CONNECTION=sync
@@ -45,8 +55,8 @@ MAIL_FROM_NAME="Personal Money Manager"
 EOF
 fi
 
-# Ensure SQLite database file exists
-if [ ! -f /var/www/html/database/database.sqlite ]; then
+# Ensure SQLite database file exists if sqlite is used
+if [ "$DB_CONN" = "sqlite" ] && [ ! -f /var/www/html/database/database.sqlite ]; then
     echo "Creating SQLite database file..."
     touch /var/www/html/database/database.sqlite
 fi
