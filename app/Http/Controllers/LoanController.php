@@ -7,6 +7,7 @@ use App\Models\Loan;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -16,20 +17,21 @@ class LoanController extends Controller
     {
         $user = $request->user();
 
-        $loans = Loan::with('account')
-            ->where('user_id', $user->id)
+        $loans = Loan::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Calculate accurate real-time balances for all accounts
         $accounts = Account::where('user_id', $user->id)
             ->with(['transactions' => function ($query) {
                 $query->select('id', 'accountId', 'type', 'amount');
             }])
             ->get()
             ->map(function ($acc) {
-                $totalIncome = $acc->transactions->where('type', 'income')->sum('amount');
-                $totalExpense = $acc->transactions->where('type', 'expense')->sum('amount');
-                $currentBalance = (float) $acc->initial_balance + $totalIncome - $totalExpense;
+                // Support both deposit/withdrawal and income/expense
+                $deposits = $acc->transactions->whereIn('type', ['deposit', 'income'])->sum('amount');
+                $withdrawals = $acc->transactions->whereIn('type', ['withdrawal', 'expense'])->sum('amount');
+                $currentBalance = (float) $acc->initial_balance + $deposits - $withdrawals;
 
                 return [
                     'id' => $acc->id,
@@ -77,18 +79,21 @@ class LoanController extends Controller
 
         DB::beginTransaction();
         try {
-            $loanId = (string) Str::uuid();
-
-            $loan = Loan::create([
-                'id' => $loanId,
+            $loanData = [
+                'id' => (string) Str::uuid(),
                 'user_id' => $user->id,
-                'accountId' => $validated['accountId'] ?? null,
                 'type' => $validated['type'],
                 'name' => $validated['name'],
                 'amount' => $validated['amount'],
                 'amount_paid' => $validated['amount_paid'] ?? 0,
                 'due_date' => $validated['due_date'] ?? null,
-            ]);
+            ];
+
+            if (Schema::hasColumn('loans', 'accountId') && !empty($validated['accountId'])) {
+                $loanData['accountId'] = $validated['accountId'];
+            }
+
+            $loan = Loan::create($loanData);
 
             // If account synchronization is requested and an account is selected
             if (!empty($validated['sync_account']) && !empty($validated['accountId'])) {
@@ -96,22 +101,22 @@ class LoanController extends Controller
 
                 if ($account) {
                     if ($validated['type'] === 'borrowed') {
-                        // Borrowed money adds cash/income into your account
+                        // Borrowed money adds cash/deposit into your account
                         Transaction::create([
                             'id' => (string) Str::uuid(),
                             'accountId' => $account->id,
-                            'type' => 'income',
+                            'type' => 'deposit',
                             'amount' => $validated['amount'],
                             'category' => 'Loan / Borrowed',
                             'reason' => 'Loan borrowed from ' . $validated['name'],
                             'date' => now()->format('Y-m-d'),
                         ]);
                     } elseif ($validated['type'] === 'lent') {
-                        // Lent money deducts cash/expense from your account
+                        // Lent money deducts cash/withdrawal from your account
                         Transaction::create([
                             'id' => (string) Str::uuid(),
                             'accountId' => $account->id,
-                            'type' => 'expense',
+                            'type' => 'withdrawal',
                             'amount' => $validated['amount'],
                             'category' => 'Loan / Lent',
                             'reason' => 'Loan lent to ' . $validated['name'],
@@ -155,22 +160,22 @@ class LoanController extends Controller
 
                 if ($account) {
                     if ($loan->type === 'borrowed') {
-                        // Paying back debt is an expense from your account
+                        // Paying back debt is a withdrawal from your account
                         Transaction::create([
                             'id' => (string) Str::uuid(),
                             'accountId' => $account->id,
-                            'type' => 'expense',
+                            'type' => 'withdrawal',
                             'amount' => $validated['repayment_amount'],
                             'category' => 'Loan Repayment',
                             'reason' => 'Repayment for loan: ' . $loan->name,
                             'date' => now()->format('Y-m-d'),
                         ]);
                     } elseif ($loan->type === 'lent') {
-                        // Receiving payback from someone is income into your account
+                        // Receiving payback from someone is a deposit into your account
                         Transaction::create([
                             'id' => (string) Str::uuid(),
                             'accountId' => $account->id,
-                            'type' => 'income',
+                            'type' => 'deposit',
                             'amount' => $validated['repayment_amount'],
                             'category' => 'Loan Repayment',
                             'reason' => 'Loan repayment received from: ' . $loan->name,
